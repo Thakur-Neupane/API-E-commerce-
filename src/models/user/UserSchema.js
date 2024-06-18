@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
-    status: {
+    staus: {
       type: String,
       default: "inactive",
     },
@@ -13,13 +13,12 @@ const userSchema = new mongoose.Schema(
 
     fName: {
       type: String,
-      require: true,
-      // maxLength: [100, "How can you have more than 100 characters First Name?"],
+      required: true,
+      //    maxLength: [100, "stop spamming me"]
     },
     lName: {
       type: String,
-      require: true,
-      // maxLength: [100, "How can you have more than 100 characters Last Name?"],
+      required: true,
     },
     phone: {
       type: String,
@@ -29,15 +28,19 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
       index: 1,
-      require: true,
+      required: true,
     },
     password: {
       type: String,
-      require: true,
+      required: true,
     },
     refreshJWT: {
       type: String,
       default: "",
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -45,4 +48,4 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("User", userSchema);
+export default mongoose.model("User", userSchema); //users

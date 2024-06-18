@@ -1,4 +1,5 @@
 import UserSchema from "./UserSchema.js";
+
 export const insertUser = (userObj) => {
   return UserSchema(userObj).save();
 };
@@ -13,4 +14,8 @@ export const getAllUsers = () => {
 
 export const updateUserById = ({ _id, obj }) => {
   return UserSchema.findByIdAndUpdate(_id, obj);
+};
+
+export const updateUser = (filter, obj) => {
+  return UserSchema.findOneAndUpdate(filter, obj);
 };

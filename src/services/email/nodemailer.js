@@ -1,32 +1,66 @@
+//Email workflow;
+// have nodemailer installed
+// create Transporter
+// Form the body message
+//sendMail
+
 import nodemailer from "nodemailer";
 
-// have nodemailer install
-// create Transporter
-// FOrm the body message
-// send mail
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_SERVER,
-  port: 587,
-  secure: false, // Use `true` for port 465, `false` for all other ports
-  auth: {
-    user: SMTP_PASS,
-    pass: SMTP_USER,
-  },
-});
+const emailProcessor = async (mailBodyObj) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_SEVER,
+      port: 587,
+      secure: false, // Use `true` for port 465, `false` for all other ports
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+
+    const info = await transporter.sendMail(mailBodyObj);
+    console.log("Message sent: %s", info.messageId);
+    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 // async..await is not allowed in global scope, must use a wrapper
-async function main() {
-  // send mail with defined transport object
-  const info = await transporter.sendMail({
-    from: '"Maddison Foo Koch 👻" <maddison53@ethereal.email>', // sender address
-    to: "bar@example.com, baz@example.com", // list of receivers
-    subject: "Hello ✔", // Subject line
-    text: "Hello world?", // plain text body
-    html: "<b>Hello world?</b>", // html body
-  });
+export const emailVerificationMail = ({ email, fName, url }) => {
+  const obj = {
+    from: `"Tech Store 👻" <${process.env.SMTP_EMAIL}>`, // sender address
+    to: email, // list of receivers
+    subject: "Action Required", // Subject line
+    text: `hellow there, pelase follow the link to verify you account ${url}`, // plain text body
+    html: `
+    Hello ${fName},
+<br />
+<br />
 
-  console.log("Message sent: %s", info.messageId);
-  // Message sent: <d786aa62-4e0a-070a-47ed-0b0666549519@ethereal.email>
-}
+<p>
+    Click the button bellow to verify your email
+   </p> 
 
-main().catch(console.error);
+   <br />
+   <a href="${url}" style="padding: 2rem; background: green"> Verify Now
+   </a>
+
+
+<p>
+If the button desn't work above, Pelase copy the following url and paste in your browser
+${url}
+</p>
+<br />
+<br />
+<p>
+Regards, <br />
+Tech Store
+</p>
+
+
+    `, // html body
+  };
+
+  emailProcessor(obj);
+};

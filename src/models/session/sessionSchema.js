@@ -3,11 +3,12 @@ const sessionSchema = new mongoose.Schema(
   {
     token: {
       type: String,
-      require: true,
+      required: true,
     },
+
     associate: {
       type: String,
-      require: true,
+      default: "",
     },
   },
   {
@@ -15,4 +16,4 @@ const sessionSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("Session", sessionSchema);
+export default mongoose.model("Session", sessionSchema); //sessions
