@@ -15,11 +15,20 @@ import { auth } from "../middlewares/auth.js";
 router.get("/", auth, (req, res, next) => {
   try {
     const { userInfo } = req;
-    userInfo?._id;
-    res.json({
-      status: "success",
-      message: "TODO",
-    });
+
+    userInfo.refreshJWT = undefined;
+
+    userInfo?.status === "active"
+      ? res.json({
+          status: "success",
+          message: "",
+          userInfo,
+        })
+      : res.json({
+          status: "error",
+          message:
+            "your account has not been activated. Check your email to verify your account",
+        });
   } catch (error) {
     next(error);
   }
@@ -104,40 +113,47 @@ router.post("/user-verification", async (req, res, next) => {
   }
 });
 
-// admin authentication
+// Admin authentication
+
 router.post("/login", async (req, res, next) => {
   try {
-    console.log(req.body);
-
+    let message = "";
     const { email, password } = req.body;
+    // 1. cheich if user exist with email
     const user = await getAUser({ email });
 
-    // check if user exist with email
+    if (user?._id && user?.status === "active" && user?.isEmailVerified) {
+      //verify passwords
 
-    if (user?._id) {
-      // verify password
       const confirmPass = comparePassword(password, user.password);
 
       if (confirmPass) {
-        // user is now authenticated
+        //useris now authenticated
 
-        res.json({
+        // create jwts then return
+
+        return res.json({
           status: "success",
-          message: "Login Successful!",
+          message: "Login Successfull",
           jwts: await getTokens(email),
         });
       }
     }
 
-    // create jwt and return
+    if (user?.status === "inactive") {
+      message = "Your account is not active, contact admin";
+    }
+
+    if (!user?.isEmailVerified) {
+      message = "User not verified, please check your email and verify";
+    }
 
     res.json({
       status: "error",
-      message: "Unable to login, please try again later",
+      message: message || "Invalid login details",
     });
   } catch (error) {
     next(error);
   }
 });
-
 export default router;

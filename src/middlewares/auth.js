@@ -1,16 +1,44 @@
-import { verifyAccessJWT } from "../utils/jwt";
+import { getSession } from "../models/session/SessionModel.js";
+import { getAUser } from "../models/user/UserModel.js";
+import { verifyAccessJWT } from "../utils/jwt.js";
 
 export const auth = async (req, res, next) => {
   try {
     const { authorization } = req.headers;
-
+    let message = "";
     if (authorization) {
-      const decoded = verifyAccessJWT(authorization);
+      const decoded = await verifyAccessJWT(authorization);
 
       if (decoded?.email) {
-        throw new Error({ message: decoded, statuscode: 200 });
+        const session = await getSession({
+          token: authorization,
+          associate: decoded.email,
+        });
+        if (session?._id) {
+          const user = await getAUser({ email: decoded.email });
+
+          if (user?._id && user?.isEmailVerified && user?.status === "active") {
+            user.password = undefined;
+            user.__v = undefined;
+            req.userInfo = user;
+            return next();
+          }
+
+          if (user?.status === "inactive") {
+            message = "Your account is not active, contact admin";
+          }
+
+          if (!user?.isEmailVerified) {
+            message = "User not verified, please check your email and verify";
+          }
+        }
       }
     }
+
+    res.status(403).json({
+      statu: "error",
+      message: message || "unauthorized",
+    });
   } catch (error) {
     next(error);
   }
