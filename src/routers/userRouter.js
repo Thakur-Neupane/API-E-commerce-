@@ -1,6 +1,6 @@
 import express from "express";
-import { hashPassword } from "../utils/bcrypt.js";
-import { insertUser, updateUser } from "../models/user/UserModel.js";
+import { comparePassword, hashPassword } from "../utils/bcrypt.js";
+import { getAUser, insertUser, updateUser } from "../models/user/UserModel.js";
 import { newUserValidation } from "../middlewares/validation.js";
 import {
   deleteSession,
@@ -9,9 +9,13 @@ import {
 const router = express.Router();
 import { v4 as uuidv4 } from "uuid";
 import { emailVerificationMail } from "../services/email/nodemailer.js";
+import { getTokens, signAccessJWT, signRefreshJWT } from "../utils/jwt.js";
+import { auth } from "../middlewares/auth.js";
 
-router.get("/", (req, res, next) => {
+router.get("/", auth, (req, res, next) => {
   try {
+    const { userInfo } = req;
+    userInfo?._id;
     res.json({
       status: "success",
       message: "TODO",
@@ -94,6 +98,42 @@ router.post("/user-verification", async (req, res, next) => {
     res.json({
       status: "error",
       message: "Invalid link, contact admin",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// admin authentication
+router.post("/login", async (req, res, next) => {
+  try {
+    console.log(req.body);
+
+    const { email, password } = req.body;
+    const user = await getAUser({ email });
+
+    // check if user exist with email
+
+    if (user?._id) {
+      // verify password
+      const confirmPass = comparePassword(password, user.password);
+
+      if (confirmPass) {
+        // user is now authenticated
+
+        res.json({
+          status: "success",
+          message: "Login Successful!",
+          jwts: await getTokens(email),
+        });
+      }
+    }
+
+    // create jwt and return
+
+    res.json({
+      status: "error",
+      message: "Unable to login, please try again later",
     });
   } catch (error) {
     next(error);
