@@ -3,13 +3,19 @@ import { comparePassword, hashPassword } from "../utils/bcrypt.js";
 import { getAUser, insertUser, updateUser } from "../models/user/UserModel.js";
 import { newUserValidation } from "../middlewares/validation.js";
 import {
+  deleteManySession,
   deleteSession,
   insertSession,
 } from "../models/session/SessionModel.js";
 const router = express.Router();
 import { v4 as uuidv4 } from "uuid";
 import { emailVerificationMail } from "../services/email/nodemailer.js";
-import { getTokens, signAccessJWT, signRefreshJWT } from "../utils/jwt.js";
+import {
+  getTokens,
+  signAccessJWT,
+  signRefreshJWT,
+  verifyRefreshJWT,
+} from "../utils/jwt.js";
 import { auth } from "../middlewares/auth.js";
 
 router.get("/", auth, (req, res, next) => {
@@ -17,7 +23,7 @@ router.get("/", auth, (req, res, next) => {
     const { userInfo } = req;
 
     userInfo.refreshJWT = undefined;
-
+    a;
     userInfo?.status === "active"
       ? res.json({
           status: "success",
@@ -156,4 +162,67 @@ router.post("/login", async (req, res, next) => {
     next(error);
   }
 });
+
+// return new jwt access
+
+router.get("/new-accessjwt", async (req, res, next) => {
+  try {
+    const { authorization } = req.headers;
+    console.log(authorization);
+
+    // verify jwt
+    const decode = await verifyRefreshJWT(authorization);
+
+    if (decode?.email) {
+      // check if it exist in user table
+      const user = await getAUser({
+        email: decode.email,
+        refreshJWT: authorization,
+      });
+
+      if (user?._id) {
+        // create new access jwt and return
+
+        const accessJWT = await signAccessJWT(decode.email);
+
+        if (token) {
+          return res.json({
+            status: "success",
+            message: "",
+            accessJWT,
+          });
+        }
+      }
+    }
+
+    // ELSE // return 401
+    return res.json({
+      status: "error",
+      message: "Unauthorized",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/logout", auth, async (req, res, next) => {
+  try {
+    const { email } = req.userInfo;
+
+    await updateUser({ email }, { refreshJWT: "" });
+
+    // verify jwt
+    await deleteManySession({ associate: email });
+
+    res.json({
+      status: "success",
+      message: "You are logged out ",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ELSE // return 401
+
 export default router;

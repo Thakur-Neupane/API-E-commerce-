@@ -31,6 +31,14 @@ export const signRefreshJWT = async (email) => {
   return user._id ? refreshJWT : null;
 };
 
+export const verifyRefreshJWT = (token) => {
+  try {
+    return jwt.verify(token, process.env.REFRESHJWT_SECRET);
+  } catch (error) {
+    return error.message;
+  }
+};
+
 export const getTokens = async (email) => {
   return {
     accessJWT: await signAccessJWT(email),

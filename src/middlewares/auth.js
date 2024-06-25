@@ -8,6 +8,7 @@ export const auth = async (req, res, next) => {
     let message = "";
     if (authorization) {
       const decoded = await verifyAccessJWT(authorization);
+      if ((decoded = "jwt expired")) message = "jwt expired";
 
       if (decoded?.email) {
         const session = await getSession({
@@ -34,7 +35,7 @@ export const auth = async (req, res, next) => {
         }
       }
     }
-
+    const statusCode = message === "jwt expired" ? 403 : 401;
     res.status(403).json({
       statu: "error",
       message: message || "unauthorized",
