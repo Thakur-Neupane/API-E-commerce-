@@ -3,18 +3,19 @@ const categorySchema = new mongoose.Schema(
   {
     status: {
       type: String,
-      required: true,
+      default: "inactive",
     },
 
     title: {
       type: String,
       required: true,
     },
+
     slug: {
       type: String,
-      required: true,
       unique: true,
       index: 1,
+      required: true,
     },
   },
   {
@@ -22,4 +23,4 @@ const categorySchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("Category", categorySchema); //category
+export default mongoose.model("Category", categorySchema); //categories

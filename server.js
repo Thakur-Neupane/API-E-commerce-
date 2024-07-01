@@ -4,8 +4,8 @@ const app = express();
 const PORT = process.env.PORT || 8001;
 
 // db connect
-import { dbConnection } from "./src/config/dbConfig.js";
-dbConnection();
+import { connectDb } from "./src/config/dbConfig.js";
+connectDb();
 
 //middlewares
 import cors from "cors";
@@ -28,15 +28,13 @@ app.get("/", (req, res, next) => {
   });
 });
 
-// app.use("*", (req, res, next) => {
-//   const err = new Error("404 Page nto found");
-//   err.statusCode = 404;
-//   next(err);
-// });
+app.use("*", (req, res, next) => {
+  const err = new Error("404 Page nto found");
+  err.statusCode = 404;
+  next(err);
+});
 
 app.use((error, req, res, next) => {
-  console.log(error, "--------");
-
   res.status(error.statusCode || 500);
   res.json({
     status: "error",
