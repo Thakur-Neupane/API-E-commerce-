@@ -64,3 +64,75 @@ Tech Store
 
   emailProcessor(obj);
 };
+
+// send OTP for password
+export const sendOTPMail = ({ email, fName, token }) => {
+  const obj = {
+    from: `"Tech Store" <${process.env.SMTP_EMAIL}>`, // sender address
+    to: email, // list of receivers
+    subject: "OTP for reset password", // Subject line
+    text: `hellow there, Here is your OTP =  ${token}`, // plain text body
+    html: `
+    Hello ${fName},
+<br />
+<br />
+
+<p>
+   Here is your OTP
+   </p> 
+
+   <br />
+   <div  style="font-size: 2rem; font-weight: bolder;"> ${token}
+   </div>
+
+
+<p>
+If you didn't request your otp to reset your password, Please don't share this code with anybody.
+</p>
+<br />
+<br />
+<p>
+Regards, <br />
+Tech Store
+</p>
+
+
+    `, // html body
+  };
+
+  emailProcessor(obj);
+};
+
+// Account update changed email notification
+export const accountUpdatedNotification = ({ email, fName }) => {
+  const obj = {
+    from: `"Tech Store" <${process.env.SMTP_EMAIL}>`, // sender address
+    to: email, // list of receivers
+    subject: "Your account has been updated", // Subject line
+    text: `hellow there, somebody just updated your account, if that's not you, pelase change your password and contact us asap`, // plain text body
+    html: `
+    Hello ${fName},
+<br />
+<br />
+
+<p>
+somebody just updated your account, if that's not you, please change your password and contact us asap
+   </p> 
+
+   <br />
+  
+
+ 
+<br />
+<br />
+<p>
+Regards, <br />
+Tech Store
+</p>
+
+
+    `, // html body
+  };
+
+  emailProcessor(obj);
+};

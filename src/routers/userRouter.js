@@ -5,11 +5,16 @@ import { newUserValidation } from "../middlewares/validation.js";
 import {
   deleteManySession,
   deleteSession,
+  getSession,
   insertSession,
 } from "../models/session/SessionModel.js";
 const router = express.Router();
 import { v4 as uuidv4 } from "uuid";
-import { emailVerificationMail } from "../services/email/nodemailer.js";
+import {
+  accountUpdatedNotification,
+  emailVerificationMail,
+  sendOTPMail,
+} from "../services/email/nodemailer.js";
 import {
   getTokens,
   signAccessJWT,
@@ -17,13 +22,14 @@ import {
   verifyRefreshJWT,
 } from "../utils/jwt.js";
 import { auth } from "../middlewares/auth.js";
+import { otpGenerator } from "../utils/randmo.js";
 
 router.get("/", auth, (req, res, next) => {
   try {
     const { userInfo } = req;
 
     userInfo.refreshJWT = undefined;
-    a;
+
     userInfo?.status === "active"
       ? res.json({
           status: "success",
@@ -163,29 +169,28 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
-// return new jwt access
-
+// return new accessJWT
 router.get("/new-accessjwt", async (req, res, next) => {
   try {
     const { authorization } = req.headers;
-    console.log(authorization);
 
     // verify jwt
-    const decode = await verifyRefreshJWT(authorization);
 
+    const decode = verifyRefreshJWT(authorization);
+    console.log(decode, "--------");
     if (decode?.email) {
-      // check if it exist in user table
+      // check if exist in the user table,
       const user = await getAUser({
         email: decode.email,
         refreshJWT: authorization,
       });
 
       if (user?._id) {
-        // create new access jwt and return
+        // create new accessJWT and return
 
         const accessJWT = await signAccessJWT(decode.email);
 
-        if (token) {
+        if (accessJWT) {
           return res.json({
             status: "success",
             message: "",
@@ -195,8 +200,7 @@ router.get("/new-accessjwt", async (req, res, next) => {
       }
     }
 
-    // ELSE // return 401
-    return res.json({
+    res.status(401).json({
       status: "error",
       message: "Unauthorized",
     });
@@ -205,24 +209,122 @@ router.get("/new-accessjwt", async (req, res, next) => {
   }
 });
 
+// Logout user
 router.delete("/logout", auth, async (req, res, next) => {
   try {
     const { email } = req.userInfo;
 
     await updateUser({ email }, { refreshJWT: "" });
-
     // verify jwt
     await deleteManySession({ associate: email });
 
     res.json({
       status: "success",
-      message: "You are logged out ",
+      message: "you are loggedout",
     });
   } catch (error) {
     next(error);
   }
 });
+// request OTP for password reset
+router.post("/otp", async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    console.log(req.body, "lll");
 
-// ELSE // return 401
+    const user = await getAUser({ email });
+
+    if (user?._id) {
+      const token = otpGenerator();
+
+      await insertSession({
+        token,
+        associate: email,
+        type: "otp",
+      });
+
+      //send the email
+      sendOTPMail({ token, fName: user.fName, email });
+    }
+
+    res.json({
+      status: "success",
+      message:
+        "If your email is found in our system, We have sent you an OTP in your email, please check your Inbox/Junk folder",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+// request OTP for password reset
+router.post("/otp", async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    console.log(req.body, "lll");
+
+    const user = await getAUser({ email });
+
+    if (user?._id) {
+      const token = otpGenerator();
+
+      await insertSession({
+        token,
+        associate: email,
+        type: "otp",
+      });
+
+      //send the email
+      sendOTPMail({ token, fName: user.fName, email });
+    }
+
+    res.json({
+      status: "success",
+      message:
+        "If your email is found in our system, We have sent you an OTP in your email, please check your Inbox/Junk folder",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+// request OTP for password reset
+router.patch("/password/reset", async (req, res, next) => {
+  try {
+    const { email, otp, password } = req.body;
+    if ((email, otp, password)) {
+      // verify otp is valid
+
+      const session = await deleteSession({
+        token: otp,
+        associate: email,
+        type: "otp",
+      });
+
+      if (session?._id) {
+        //update user table with new hashPass
+
+        const user = await updateUser(
+          { email },
+          { password: hashPassword(password) }
+        );
+
+        if (user?._id) {
+          //send email notification of account update
+          accountUpdatedNotification({ email, fName: user.fName });
+          return res.json({
+            status: "success",
+            message: "Your password reseted successfully",
+          });
+        }
+      }
+    }
+
+    res.json({
+      status: "error",
+      message: "Invalid otp or data reqeust, try agian later",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;
