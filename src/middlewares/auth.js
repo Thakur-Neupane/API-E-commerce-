@@ -39,7 +39,7 @@ export const auth = async (req, res, next) => {
 
     const statusCode = message == "jwt expired" ? 403 : 401;
     res.status(statusCode).json({
-      statu: "error",
+      status: "error",
       message: message || "unauthorized",
     });
   } catch (error) {

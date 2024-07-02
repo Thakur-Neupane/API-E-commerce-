@@ -1,48 +1,51 @@
 import express from "express";
 const router = express.Router();
 import slugify from "slugify";
-import { insertProduct } from "../models/product/productModal";
+import {
+  insertProduct,
+  getAllProducts,
+} from "../models/product/productModal.js";
 
 router.post("/", async (req, res, next) => {
   try {
-    const { title } = req.body;
-    if (typeof title === "string" && title.length) {
-      const slug = slugify(title, {
-        lower: true,
-      });
+    const { name } = req.body;
 
-      const productObj = await insertProduct({
-        name,
-        slug,
-        sku,
-        price,
-        qty,
-        sales,
-        category,
-        salesStart,
-        salesEnd,
-        Description,
+    const slug = slugify(name, {
+      lower: true,
+    });
+    const prod = await insertProduct({ ...req.body, slug });
+    if (prod?._id) {
+      return res.json({
+        status: "success",
+        message: "New product has been added successfully.",
       });
-
-      if (productObj?._id) {
-        return res.json({
-          status: "success",
-          message: "New category has been added",
-        });
-      }
     }
 
     res.json({
       status: "error",
-      message: "Unable to add category, try again later",
+      message: "Unable to add product, try again later",
     });
   } catch (error) {
     if (error.message.includes("E11000 duplicate")) {
       error.message =
-        "This product already exist, please change the name of the Category and try agian.";
-      error.statusCode = 200;
+        "This product slug or sku already exist, please change the name of the product or sku and try agian.";
+      error.statusCode = 400;
     }
     next(error);
   }
 });
+
+router.get("/", async (req, res, next) => {
+  try {
+    const products = await getAllProducts();
+    res.json({
+      status: "success",
+      message: "",
+      products,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

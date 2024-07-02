@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 const productSchema = new mongoose.Schema(
   {
-    name: {
+    status: {
       type: String,
-      required: true,
+      default: "inactive",
     },
 
-    categories: {
+    name: {
       type: String,
       required: true,
     },
@@ -20,36 +20,53 @@ const productSchema = new mongoose.Schema(
 
     sku: {
       type: String,
+      unique: [
+        true,
+        "This SKU has been already used for the another product, please use different SKU",
+      ],
       required: true,
     },
-
+    qty: {
+      type: Number,
+      required: true,
+    },
     price: {
-      type: String,
+      type: Number,
       required: true,
     },
-
-    sales: {
-      type: String,
-      required: true,
+    salesPrice: {
+      type: Number,
+      default: null,
     },
-
     salesStart: {
-      type: String,
-      required: true,
+      type: Date,
+      default: "",
     },
-
     salesEnd: {
-      type: String,
+      type: Date,
+      default: "",
+    },
+    parentCatId: {
+      type: mongoose.Types.ObjectId,
       required: true,
     },
     description: {
       type: String,
       required: true,
     },
+    thumbnail: {
+      type: String,
+      default: "",
+    },
+    images: [
+      {
+        type: String,
+      },
+    ],
   },
   {
     timestamps: true,
   }
 );
 
-export default mongoose.model("Product", productSchema);
+export default mongoose.model("Product", productSchema); //productSchema
