@@ -7,7 +7,6 @@ import {
   insertCategory,
   updateCategory,
 } from "../models/category/CategoryModel.js";
-import { auth } from "../middlewares/auth.js";
 
 router.post("/", async (req, res, next) => {
   try {
@@ -60,9 +59,9 @@ router.get("/", async (req, res, next) => {
 router.put("/:_id", async (req, res, next) => {
   try {
     const { _id } = req.params;
-    const categories = await updateCategory(_id, req.body);
+    const category = await updateCategory(_id, req.body);
 
-    categories?._id
+    category?._id
       ? res.json({
           status: "success",
           message: "Category has been edited",
@@ -76,9 +75,11 @@ router.put("/:_id", async (req, res, next) => {
   }
 });
 
-router.delete("/:_id", async (req, res, next) => {
+router.delete("/:_id?", async (req, res, next) => {
   try {
+    console.log(req.params);
     const { _id } = req.params;
+    console.log(_id);
     const category = await deleteCategory(_id);
 
     category?._id

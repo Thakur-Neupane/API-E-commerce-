@@ -9,11 +9,12 @@ export const getAllCategories = () => {
 };
 
 export const updateCategory = (_id, obj) => {
-  return CategorySchema.findByIdAndUpdate(_id, obj, { new: true });
+  return CategorySchema.findByIdAndUpdate(_id, obj);
 };
 
 export const deleteCategory = (_id) => {
-  return CategorySchema.findByIdAndDelete(_id);
+  console.log(_id, "chhhh");
+  return CategorySchema.findByIdAndDelete({ _id });
 };
 
 // export const deleteManyCategory = (filter) => {
