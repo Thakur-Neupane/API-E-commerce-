@@ -15,6 +15,6 @@ export default [
 
   {
     path: "/api/v1/products",
-    middlewawers: [auth, productRouter],
+    middlewawers: [productRouter],
   },
 ];

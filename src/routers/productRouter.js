@@ -5,14 +5,16 @@ import {
   insertProduct,
   getAllProducts,
 } from "../models/product/productModal.js";
+import multerUpload from "../utils/uploadMulter.js";
 
-router.post("/", async (req, res, next) => {
+router.post("/", multerUpload.array("images", 5), async (req, res, next) => {
   try {
     const { name } = req.body;
 
     const slug = slugify(name, {
       lower: true,
     });
+
     const prod = await insertProduct({ ...req.body, slug });
     if (prod?._id) {
       return res.json({

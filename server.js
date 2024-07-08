@@ -19,6 +19,10 @@ app.use(morgan("tiny"));
 import routers from "./src/routers/routers.js";
 routers.forEach(({ path, middlewawers }) => app.use(path, ...middlewawers));
 
+import filePath from "path";
+const __dirname = filePath.resolve();
+app.use(express.static(filePath.join(__dirname, "public")));
+
 // ErrorHandler
 
 app.get("/", (req, res, next) => {
